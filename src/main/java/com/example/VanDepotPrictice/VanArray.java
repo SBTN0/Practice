@@ -7,10 +7,11 @@ import java.io.FileNotFoundException;
 
 @Component
 public class VanArray {
-    private List<Van> vanList = new ArrayList<>();
+    private final List<Van> vanList = new ArrayList<>();
     private final String FILE_NAME = "VansList.txt";
 
     public void addVan(Van van) {
+        if (this.findVanByNum(van.getNum()) != null) throw new IllegalArgumentException("Такой вагон уже существует");
         vanList.add(van);
     }
 
@@ -35,16 +36,14 @@ public class VanArray {
         return  vanList.size();
     }
 
-    public void writeToFile(Van van) {
-        vanList = this.readFromFile();
-        vanList.add(van);
+    public void writeToFile(List<Van> vanList) {
         try (Formatter formatter = new Formatter(FILE_NAME)) {
             formatter.format("%-20s | %-20s | %-15s | %-16s | %-11s | %-10s | %-20s%n", "Название", "Заводской номер", "Тип", "Грузоподъемность", "Год выпуска", "Загрузка", "Станция приписки");
             formatter.format("%-20s | %-20s | %-15s | %-16s | %-11s | %-10s | %-20s%n", "--------------------", "--------------------", "---------------", "----------------", "-----------", "----------", "--------------------");
-            for (Van vann : vanList) {
+            for (Van van : vanList) {
                 formatter.format("%-20s | %-20d | %-15s | %-16d | %-11d | %-10d | %-20s%n",
-                        vann.getName(), vann.getNum(), vann.getType(), vann.getWeight(),
-                        vann.getYear(), vann.getLoad(), vann.getStation());
+                        van.getName(), van.getNum(), van.getType(), van.getWeight(),
+                        van.getYear(), van.getLoad(), van.getStation());
             }
         } catch (FileNotFoundException e) {
             System.out.println("Файл не найден: " + e.getMessage());
@@ -52,8 +51,7 @@ public class VanArray {
     }
 
     public List<Van> readFromFile() {
-        List<Van> vanList = new ArrayList<>();
-
+        List<Van> vanArray = new ArrayList<>();
         try (Scanner scanner = new Scanner(new File(FILE_NAME))) {
             scanner.nextLine();
             scanner.nextLine();
@@ -71,32 +69,20 @@ public class VanArray {
                 String station = parts[6].trim();
 
                 Van van = new Van(name, num, type, weight, year, load, station);
-                vanList.add(van);
+                vanArray.add(van);
             }
         } catch (FileNotFoundException e) {
             System.out.println("Файл не найден: " + e.getMessage());
         }
-
-        return vanList;
+        return vanArray;
     }
 
     public void removeByNum(int numToRemove) {
-        List<Van> vanList = this.readFromFile();
-        vanList.removeIf(van -> van.getNum() == numToRemove);
-        this.writeToFile(vanList);
-    }
-
-    public void writeToFile(List<Van> vanList) {
-        try (Formatter formatter = new Formatter(FILE_NAME)) {
-            formatter.format("%-20s | %-20s | %-15s | %-16s | %-11s | %-10s | %-20s%n", "Название", "Заводской номер", "Тип", "Грузоподъемность", "Год выпуска", "Загрузка", "Станция приписки");
-            formatter.format("%-20s | %-20s | %-15s | %-16s | %-11s | %-10s | %-20s%n", "--------------------", "--------------------", "---------------", "----------------", "-----------", "----------", "--------------------");
-            for (Van van : vanList) {
-                formatter.format("%-20s | %-20d | %-15s | %-16d | %-11d | %-10d | %-20s%n",
-                        van.getName(), van.getNum(), van.getType(), van.getWeight(),
-                        van.getYear(), van.getLoad(), van.getStation());
-            }
-        } catch (FileNotFoundException e) {
-            System.out.println("Файл не найден: " + e.getMessage());
+        try {
+            vanList.removeIf(van -> van.getNum() == numToRemove);
+            this.writeToFile(vanList);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Вагона с таким номером не существует");
         }
     }
 }

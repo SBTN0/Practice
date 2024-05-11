@@ -1,6 +1,6 @@
 package com.example.VanDepotPrictice.DTO;
 
-public class NewVanDto {
+public class AddVanDto {
     private String name;
     private int num;
     private String type;
