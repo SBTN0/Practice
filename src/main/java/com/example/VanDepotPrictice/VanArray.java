@@ -11,9 +11,13 @@ public class VanArray {
     private final String FILE_NAME = "VansList.txt";
 
     public void addVan(Van van) {
-        if (this.findVanByNum(van.getNum()) != null) throw new IllegalArgumentException("Такой вагон уже существует");
+        Optional<Van> existingVan = this.findVanByNumOptional(van.getNum());
+        if (existingVan.isPresent()) {
+            throw new IllegalArgumentException("Такой вагон уже существует");
+        }
         vanList.add(van);
     }
+
 
     public List<Van> getVanList() {
         return vanList;
@@ -23,13 +27,22 @@ public class VanArray {
         vanList.remove(this.findVanByNum(num));
     }*/
 
+    public Optional<Van> findVanByNumOptional(int num) {
+        try {
+            return Optional.of(findVanByNum(num));
+        } catch (NoSuchElementException e) {
+            return Optional.empty();
+        }
+    }
+
+
     public Van findVanByNum(int num) {
         for (Van van : vanList) {
             if (van.getNum() == num) {
                 return van;
             }
         }
-        return null;
+        throw new NoSuchElementException("Вагона с таким номером не существует");
     }
 
     public int size() {
@@ -78,11 +91,7 @@ public class VanArray {
     }
 
     public void removeByNum(int numToRemove) {
-        try {
-            vanList.removeIf(van -> van.getNum() == numToRemove);
-            this.writeToFile(vanList);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Вагона с таким номером не существует");
-        }
+        vanList.remove(this.findVanByNum(numToRemove));
+        this.writeToFile(vanList);
     }
 }

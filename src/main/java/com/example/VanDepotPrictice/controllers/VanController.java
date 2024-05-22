@@ -5,10 +5,12 @@ import com.example.VanDepotPrictice.DTO.LoadDto;
 import com.example.VanDepotPrictice.DTO.ReStationDto;
 import com.example.VanDepotPrictice.Van;
 import com.example.VanDepotPrictice.VanArray;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @RestController
 @RequestMapping("/vans")
@@ -38,11 +40,14 @@ public class VanController {
     @PostMapping("/load_van")
     public ResponseEntity<?> loadVan(@RequestBody LoadDto loadDto) {
         try {
+            if (loadDto == null) throw new NullPointerException();
             vanArray.findVanByNum(loadDto.getNum()).loadVan(loadDto.getLoad());
             vanArray.writeToFile(vanArray.getVanList());
             return ResponseEntity.ok("Вагон успешно загружен на " + loadDto.getLoad());
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Ошибка добавления объекта: " + e.getMessage());
+        } catch (NoSuchElementException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка загрузки вагона: " + e.getMessage());
         }
     }
 
@@ -52,8 +57,10 @@ public class VanController {
             vanArray.findVanByNum(loadDto.getNum()).unloadVan(loadDto.getLoad());
             vanArray.writeToFile(vanArray.getVanList());
             return ResponseEntity.ok("Вагон успешно разгружен на " + loadDto.getLoad());
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body("Ошибка добавления объекта: " + e.getMessage());
+        } catch (NoSuchElementException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка разгрузки вагона: " + e.getMessage());
         }
     }
 
@@ -63,8 +70,10 @@ public class VanController {
             vanArray.findVanByNum(reStationDto.getNum()).reStation(reStationDto.getStation());
             vanArray.writeToFile(vanArray.getVanList());
             return ResponseEntity.ok("Станция приписки успешно изменена на: " + reStationDto.getStation());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Ошибка изменения санции: " + e.getMessage());
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Ошибка изменения станции: " + e.getMessage());
+        } catch (NoSuchElementException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка изменения станции: " + e.getMessage());
         }
     }
 
@@ -93,7 +102,7 @@ public class VanController {
             vanArray.removeByNum(num);
             return ResponseEntity.ok("Вагон с номером " + num + " успешно удален.");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Ошибка удаления вагона: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка удаления вагона: " + e.getMessage());
         }
     }
 }
