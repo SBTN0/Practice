@@ -8,7 +8,7 @@ import java.io.FileNotFoundException;
 @Component
 public class VanArray {
     private final List<Van> vanList = new ArrayList<>();
-    private final String FILE_NAME = "VansList.txt";
+    private static final String FILE_NAME = "VansList.txt";
 
     public void addVan(Van van) {
         Optional<Van> existingVan = this.findVanByNumOptional(van.getNum());
@@ -23,9 +23,44 @@ public class VanArray {
         return vanList;
     }
 
-    /*public void removeVan(int num) {
-        vanList.remove(this.findVanByNum(num));
-    }*/
+    public void setVanList(List<Van> vanList) { this.vanList.addAll(vanList); }
+
+    public static Map<Integer, Integer> getWeightCounts() {
+        Map<Integer, Integer> weightCounts = new HashMap<>();
+        for (Van van : readFromFile()) {
+            int weight = van.getWeight();
+            weightCounts.put(weight, weightCounts.getOrDefault(weight, 0) + 1);
+        }
+        return weightCounts;
+    }
+
+    public static Map<String, Double> calculateKurtosis(Map<Integer, Integer> weightCounts) {
+        int n = weightCounts.values().stream().mapToInt(Integer::intValue).sum();
+        Map<String, Double> statisticData = new LinkedHashMap<>();
+
+        double mean = weightCounts.entrySet().stream()
+                .mapToDouble(e -> e.getKey() * e.getValue())
+                .sum() / n;
+
+        double variance = weightCounts.entrySet().stream()
+                .mapToDouble(e -> e.getValue() * Math.pow(e.getKey() - mean, 2))
+                .sum() / (n - 1);
+
+        double stdDev = Math.sqrt(variance);
+
+        double kurtosisNumerator = weightCounts.entrySet().stream()
+                .mapToDouble(e -> e.getValue() * Math.pow((e.getKey() - mean) / stdDev, 4))
+                .sum();
+
+        double kurtosis = (n * (n + 1) * kurtosisNumerator) / ((n - 1) * (n - 2) * (n - 3))
+                - (3 * Math.pow(n - 1, 2)) / ((n - 2) * (n - 3));
+
+        statisticData.put("Центральный эмпирический момент 4-го порядка", mean);
+        statisticData.put("Дисперсия", variance);
+        statisticData.put("Среднее квадратическое отклонение", stdDev);
+        statisticData.put("Коэффициент эксцесса", kurtosis);
+        return statisticData;
+    }
 
     public Optional<Van> findVanByNumOptional(int num) {
         try {
@@ -63,7 +98,7 @@ public class VanArray {
         }
     }
 
-    public List<Van> readFromFile() {
+    public static List<Van> readFromFile() {
         List<Van> vanArray = new ArrayList<>();
         try (Scanner scanner = new Scanner(new File(FILE_NAME))) {
             scanner.nextLine();

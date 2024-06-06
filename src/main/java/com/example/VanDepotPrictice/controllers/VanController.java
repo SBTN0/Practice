@@ -105,4 +105,23 @@ public class VanController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка удаления вагона: " + e.getMessage());
         }
     }
+
+    @GetMapping("/{num}")
+    public ResponseEntity<?> findByNum(@PathVariable int num) {
+        try {
+            return ResponseEntity.ok(vanArray.findVanByNum(num));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Ошибка поиска вагона: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/wrfile")
+    public ResponseEntity<?> writeFromFile() {
+        try {
+            vanArray.setVanList(vanArray.readFromFile());
+            return ResponseEntity.ok("Данные из файла успешно добавленны в приложение");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Ошибка загрузки данных из файла: " + e.getMessage());
+        }
+    }
 }
